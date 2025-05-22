@@ -5,21 +5,16 @@ export class Camera {
     this.height = height;
     this.x = 128;
     this.y = 128;
-    this.maxX = map.image.width - this.width;
-    this.maxY = map.image.height - this.height;
+    this.maxX = map.cols * map.tileSize - this.width;
+    this.maxY = map.rows * map.tileSize - this.height;
     this.speed = 256; // px per second
   }
 
-
   move(deltaTime, speedX, speedY) {
-
-    console.log('tomek--- deltatime', deltaTime, speedX * this.speed * deltaTime, speedY * this.speed * deltaTime);
     this.x += speedX * this.speed * deltaTime;
     this.y += speedY * this.speed * deltaTime;
 
     this.x = Math.max(0, Math.min(this.x, this.maxX));
     this.y = Math.max(0, Math.min(this.y, this.maxY));
   }
-
-  
 }

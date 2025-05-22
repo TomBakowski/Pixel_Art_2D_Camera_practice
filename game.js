@@ -5,30 +5,29 @@ import { Map } from './map.js';
 const GAME_WIDTH = 512;
 const GAME_HEIGHT = 512;
 
-
-
 class Game {
   constructor() {
     this.map = new Map();
     this.camera = new Camera(this.map, GAME_WIDTH, GAME_HEIGHT);
     this.keys = [];
+    this.debug = false;
 
     window.addEventListener('keydown', e => {
       if (this.keys.indexOf(e.key) === -1) {
         this.keys.unshift(e.key);
       }
-
-      console.log('tomek--- keys down', this.keys);
     });
 
     window.addEventListener('keyup', e => {
-      const index = this.keys.indexOf(e.key)
+      if (e.key === 'd') {
+        this.debug = !this.debug;
+      } else {
+        const index = this.keys.indexOf(e.key)
 
-      if (index > -1) {
-        this.keys.splice(index, 1);
+        if (index > -1) {
+          this.keys.splice(index, 1);
+        }
       }
-
-      console.log('tomek--- keys up', this.keys);
     });
   }
 
@@ -44,21 +43,49 @@ class Game {
     this.camera.move(deltaTime, speedX, speedY);
   }
 
-  render(ctx) {
-    ctx.drawImage(
-      this.map.image, 
-      this.camera.x,
-      this.camera.y,
-      GAME_WIDTH,
-      GAME_HEIGHT,
-      0, 
-      0,
-      GAME_WIDTH,
-      GAME_HEIGHT
-    );
+  drawLayer(layer, ctx) {
+    const startCol = Math.floor(this.camera.x / this.map.tileSize);
+    const endCol = startCol + (this.camera.width / this.map.tileSize)
+    const startRow = Math.floor(this.camera.y / this.map.tileSize);
+    const endRow = startRow + (this.camera.height / this.map.tileSize);
+    const offsetX = -this.camera.x + startCol * this.map.tileSize;
+    const offsetY = -this.camera.y + startRow * this.map.tileSize;
+
+    for(let row = startRow; row <= endRow; row++) {
+      for (let column = startCol; column <= endCol; column++) {
+        const tile = this.map.getTile(layer, column, row);
+
+        const x = (column - startCol) * this.map.tileSize + offsetX;
+        const y = (row - startRow) * this.map.tileSize + offsetY;
+        
+         ctx.drawImage(
+          this.map.image, 
+          (tile - 1) * this.map.image_tile % this.map.image.width,
+          Math.floor((tile - 1) / this.map.image_cols) * this.map.image_tile,
+          this.map.image_tile,
+          this.map.image_tile,
+          Math.round(x),
+          Math.round(y),
+          this.map.tileSize,
+          this.map.tileSize,
+        );
+
+        if (this.debug) {
+          ctx.strokeRect(
+            Math.round(x),
+            Math.round(y),
+            this.map.tileSize,
+            this.map.tileSize,
+          );
+        }
+      }
+    }
   }
 
- 
+  render(ctx) {
+    this.drawLayer(0, ctx);
+    this.drawLayer(1, ctx);
+  }
 }
 
 window.addEventListener('load', function() {
@@ -66,6 +93,7 @@ window.addEventListener('load', function() {
   const ctx = canvas.getContext('2d');
   canvas.width = GAME_WIDTH;
   canvas.height = GAME_HEIGHT;
+  canvas.imageSmoothingEnabled = false;
 
 
 
